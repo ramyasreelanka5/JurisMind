@@ -1,0 +1,283 @@
+/* frontend/src/App.css */
+
+/* --- Base Styles --- */
+body {
+    background-color: #181818;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    box-sizing: border-box;
+}
+
+h1 {
+    text-align: center;
+    color: #e0e0e0;
+    margin: 1rem 0;
+    font-weight: 500;
+}
+
+/* --- Chat Area --- */
+.chat-box {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    margin-bottom: 120px; /* Space for input */
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem; /* Increased gap between messages */
+}
+
+/* --- Message Bubbles --- */
+.user-msg, .bot-msg {
+    max-width: 90%; /* Allow bubbles to be wider */
+    padding: 1rem 1.5rem;
+    border-radius: 1.2rem;
+    word-wrap: break-word;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.user-msg {
+    background-color: #2a3a31; /* Subtler user message color */
+    color: #e0e0e0;
+    align-self: flex-end;
+    border-bottom-right-radius: 0.3rem;
+}
+
+.bot-msg {
+    background-color: #23272f;
+    color: #e0e0e0; /* Slightly off-white for better reading */
+    align-self: flex-start;
+    border-bottom-left-radius: 0.3rem;
+    text-align: left;
+}
+
+/* --- Markdown Formatting --- */
+.bot-msg h1, .bot-msg h2, .bot-msg h3 {
+    color: #ffffff;
+    margin-top: 1.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid #3a3f47;
+}
+
+.bot-msg p {
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+.bot-msg strong {
+    color: #b9f5d8; /* Highlight color for bold text */
+    font-weight: 600;
+}
+
+.bot-msg ul, .bot-msg ol {
+    padding-left: 25px;
+    margin-bottom: 1rem;
+}
+
+.bot-msg li {
+    margin-bottom: 0.6rem;
+}
+
+.bot-msg li::marker {
+    color: #b9f5d8;
+}
+
+/* --- Code Block Styling --- */
+.bot-msg pre {
+    background-color: #121212 !important; /* Darker background for code */
+    border-radius: 8px;
+    padding: 1rem !important;
+    border: 1px solid #3a3f47;
+    white-space: pre-wrap;      /* CSS3 */
+    white-space: -moz-pre-wrap; /* Firefox */
+    white-space: -pre-wrap;     /* Opera <7 */
+    white-space: -o-pre-wrap;   /* Opera 7 */
+    word-wrap: break-word;      /* IE */
+}
+
+.bot-msg code {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.95rem;
+}
+
+/* --- Related Questions --- */
+.related-questions {
+    align-self: flex-start;
+    width: 100%;
+    border-top: 1px solid #444;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.related-questions button {
+    background: #2d2f36;
+    color: #e0e0e0;
+    border: 1px solid #444;
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+}
+
+.related-questions button:hover {
+    background: #3a3f47;
+    border-color: #b9f5d8;
+}
+
+/* --- Sticky Input --- */
+.sticky-input-area {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #181818;
+    box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.2);
+    display: flex;
+    justify-content: center;
+}
+
+.input-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    max-width: 800px;
+    padding: 1rem;
+    box-sizing: border-box;
+}
+
+.input-container input[type="text"] {
+    flex-grow: 1;
+    padding: 0.8rem 1.2rem;
+    border-radius: 20px;
+    border: 1px solid #444;
+    background-color: #23272f;
+    color: #fff;
+    font-size: 1rem;
+}
+
+.input-container input[type="file"] {
+    display: none;
+}
+
+.icon-button {
+    background: none;
+    border: none;
+    color: #a0a0a0;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    transition: color 0.2s;
+}
+
+.icon-button:hover {
+    color: #b9f5d8;
+}
+
+.spinner {
+    align-self: flex-start;
+    padding: 1rem 1.5rem;
+}
+
+/* --- Add these styles for Multimodal Inputs --- */
+
+.image-preview {
+  position: relative;
+  max-width: 200px;
+  margin: 0 auto 0.5rem;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.image-preview img {
+  width: 100%;
+  display: block;
+}
+
+.image-preview button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-weight: bold;
+  line-height: 24px;
+  text-align: center;
+}
+
+/* REMOVE these old styles */
+.mic-recorder {
+  display: none;
+}
+.mic-recorder.recording {
+  display: block;
+  width: 100%;
+  height: 50px;
+  margin: 0 auto;
+}
+
+/* ADD these new styles */
+.icon-button.recording {
+  color: #ff4d4d; /* Make the icon red while recording */
+}
+
+.recording-indicator {
+  width: 100%;
+  text-align: center;
+  color: #ff4d4d;
+  font-size: 0.9rem;
+  padding-bottom: 0.5rem;
+}
+
+/* --- Add these styles for TTS Button --- */
+
+/* Make the message bubble a positioning container */
+.bot-msg {
+  position: relative;
+}
+
+/* Style the TTS button itself */
+.tts-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  padding: 0;
+  border: 1px solid transparent;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.tts-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: #b9f5d8;
+}
