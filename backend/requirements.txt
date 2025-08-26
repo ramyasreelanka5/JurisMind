@@ -1,0 +1,12 @@
+Flask
+Flask-Cors
+python-dotenv
+PyPDF2
+python-docx
+langchain
+langchain-groq
+langchain-google-genai
+faiss-cpu
+Pillow
+pydub
+SpeechRecognition
