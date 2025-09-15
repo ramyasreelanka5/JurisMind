@@ -1,20 +1,28 @@
 import os
 import traceback
 from dotenv import load_dotenv
+from typing import List, Optional
 
-# --- Explicitly load environment variables ---
+# --- Environment Variable Loading ---
 load_dotenv()
 os.environ['GROQ_API_KEY'] = os.getenv("GROQ_API_KEY")
-# The GOOGLE_API_KEY is still needed for the vision model (llm_vision)
 os.environ['GOOGLE_API_KEY'] = os.getenv("GOOGLE_API_KEY")
 
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+# --- FastAPI Imports ---
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.responses import JSONResponse
+from pydantic import BaseModel
+
+# --- Core Logic Imports ---
 from PyPDF2 import PdfReader
 from docx import Document
 from io import BytesIO
 from PIL import Image
+import speech_recognition as sr
+from pydub import AudioSegment
 
+# --- LangChain Imports ---
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.docstore.document import Document as LCDocument
 from langchain_community.vectorstores import FAISS
@@ -22,51 +30,35 @@ from langchain.prompts import PromptTemplate
 from langchain_groq import ChatGroq
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.chains import ConversationalRetrievalChain
-
-# --- Import the new LOCAL embeddings library ---
-from langchain_community.embeddings import HuggingFaceEmbeddings
-# --- We still need ChatGoogleGenerativeAI for the vision part ---
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage
 
-# Audio Processing Imports
-import speech_recognition as sr
-from pydub import AudioSegment
-
-
-
-from langchain_community.vectorstores import FAISS
-from langchain.prompts import PromptTemplate
-from langchain_groq import ChatGroq
-from langchain.memory import ConversationBufferWindowMemory
-from langchain.chains import ConversationalRetrievalChain
-
-# --- Import from the NEW, correct package ---
-from langchain_huggingface import HuggingFaceEmbeddings
-
-# --- We still need ChatGoogleGenerativeAI for the vision part ---
-from langchain_google_genai import ChatGoogleGenerativeAI
-# ... (other imports) ...
-
 # --- Initialization ---
-app = Flask(__name__)
-CORS(app)
+app = FastAPI()
+
+# --- CORS Configuration ---
+# Allows the frontend (running on a different port) to communicate with this backend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, restrict this to your frontend's domain
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # --- Global Variables & Model Loading ---
 llm_text, llm_vision, BASE_RETRIEVER, embeddings = None, None, None, None
 try:
-    # ... (llm_text and llm_vision setup is the same) ...
+    print("🚀 Initializing models and vector store...")
     groq_api_key = os.getenv("GROQ_API_KEY")
     llm_text = ChatGroq(groq_api_key=groq_api_key, model_name="llama-3.3-70b-versatile")
     llm_vision = ChatGoogleGenerativeAI(model="gemini-pro-vision", temperature=0.3)
 
-
-    # --- USE THE LOCAL HUGGING FACE EMBEDDING MODEL (from the new package) ---
     print("Initializing local embedding model...")
     model_name = "sentence-transformers/all-MiniLM-L6-v2"
     model_kwargs = {'device': 'cpu'}
     encode_kwargs = {'normalize_embeddings': False}
-    # This line of code does not change, only the import above
     embeddings = HuggingFaceEmbeddings(
         model_name=model_name,
         model_kwargs=model_kwargs,
@@ -87,10 +79,21 @@ DEFAULT_SESSION_ID = "default"
 if BASE_RETRIEVER:
     SESSION_RETRIEVERS[DEFAULT_SESSION_ID] = BASE_RETRIEVER
 
+# --- Pydantic Models for Request Bodies ---
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+class ChatRequest(BaseModel):
+    question: str
+    chat_history: List[ChatMessage] = []
+    session_id: str = DEFAULT_SESSION_ID
+
+class ResetRequest(BaseModel):
+    session_id: str = DEFAULT_SESSION_ID
 
 # --- Helper Functions ---
 def get_related_questions(user_question, bot_answer):
-    # This function remains the same as in your original code
     related_prompt = f"""
     You are an Indian Penal Code (IPC) legal assistant.
     Based on the user's last question and your answer, suggest 4 short, clear related legal questions
@@ -107,160 +110,130 @@ def get_related_questions(user_question, bot_answer):
     except Exception:
         return []
 
-# --- API Endpoints ---a
+# --- API Endpoints ---
 
-@app.route('/chat', methods=['POST'])
-def chat():
+@app.post('/chat')
+async def chat(request: ChatRequest):
     if not llm_text:
-        return jsonify({"error": "LLM not initialized"}), 500
+        return JSONResponse(status_code=500, content={"error": "LLM not initialized"})
 
-    data = request.json
-    question = data.get('question')
-    chat_history = data.get('chat_history', [])
-    session_id = data.get('session_id', DEFAULT_SESSION_ID)
-
-    if not question:
-        return jsonify({"error": "Question is required"}), 400
-
-    # Get the right retriever for the session (either base or from uploaded file)
-    retriever = SESSION_RETRIEVERS.get(session_id, BASE_RETRIEVER)
-
-    # Create a memory instance for this request
-    memory = ConversationBufferWindowMemory(
-        k=3, memory_key="chat_history", return_messages=True
-    )
-    for message in chat_history:
-        if message['role'] == 'user':
-            memory.chat_memory.add_user_message(message['content'])
+    retriever = SESSION_RETRIEVERS.get(request.session_id, BASE_RETRIEVER)
+    memory = ConversationBufferWindowMemory(k=3, memory_key="chat_history", return_messages=True)
+    for message in request.chat_history:
+        if message.role == 'user':
+            memory.chat_memory.add_user_message(message.content)
         else:
-            memory.chat_memory.add_ai_message(message['content'])
+            memory.chat_memory.add_ai_message(message.content)
 
     prompt_template = """
     <s>[INST] You are an expert legal chatbot. Your primary goal is to provide clear, accurate, and well-structured information.
-    
     **Instructions:**
     - Analyze the user's question and the provided context carefully.
     - Structure your answer using Markdown for readability.
     - Use numbered or bulleted lists for enumerations (like legal clauses or steps).
     - Use **bold text** to highlight key legal terms, parties (like "landlord" and "tenant"), and important concepts.
     - Keep your tone professional and direct.
-    
     CONTEXT: {context}
     CHAT HISTORY: {chat_history}
     QUESTION: {question}
-    
     ANSWER (in Markdown format):
     </s>[INST]
     """
-    
-    prompt = PromptTemplate(
-        template=prompt_template,
-        input_variables=['context', 'question', 'chat_history']
-    )
-
+    prompt = PromptTemplate(template=prompt_template, input_variables=['context', 'question', 'chat_history'])
 
     qa_chain = ConversationalRetrievalChain.from_llm(
-        llm=llm_text,
-        memory=memory,
-        retriever=retriever,
-        combine_docs_chain_kwargs={'prompt': prompt}
+        llm=llm_text, memory=memory, retriever=retriever, combine_docs_chain_kwargs={'prompt': prompt}
     )
 
     try:
-        result = qa_chain.invoke(input=question)
+        result = qa_chain.invoke(input=request.question)
         answer = result.get("answer", "Sorry, I could not find an answer.")
-        related_questions = get_related_questions(question, answer)
-        return jsonify({
-            "answer": answer,
-            "related_questions": related_questions
-        })
+        related_questions = get_related_questions(request.question, answer)
+        return {"answer": answer, "related_questions": related_questions}
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 
-@app.route('/upload_document', methods=['POST'])
-def upload_file():
-    # THIS FUNCTION IS NOW SIMPLER AND FASTER
+@app.post('/upload_document')
+async def upload_document(session_id: str = Form(DEFAULT_SESSION_ID), file: UploadFile = File(...)):
     if not embeddings:
-        return jsonify({"error": "Embeddings model not initialized"}), 500
-    if 'file' not in request.files:
-        return jsonify({"error": "No file part"}), 400
-    file = request.files['file']
+        return JSONResponse(status_code=500, content={"error": "Embeddings model not initialized"})
+    if not file:
+        return JSONResponse(status_code=400, content={"error": "No file part"})
     if file.filename == '':
-        return jsonify({"error": "No selected file"}), 400
-    session_id = request.form.get('session_id', DEFAULT_SESSION_ID)
+        return JSONResponse(status_code=400, content={"error": "No selected file"})
+
     try:
         raw_text = ""
         file_ext = file.filename.split('.')[-1].lower()
+        file_content = await file.read()
+
         if file_ext == "pdf":
-            reader = PdfReader(file)
+            reader = PdfReader(BytesIO(file_content))
             for page in reader.pages:
                 raw_text += page.extract_text() or ""
         elif file_ext == "docx":
-            doc = Document(BytesIO(file.read()))
+            doc = Document(BytesIO(file_content))
             for para in doc.paragraphs:
                 raw_text += (para.text or "") + "\n"
         elif file_ext == "txt":
-            raw_text = file.read().decode('utf-8')
+            raw_text = file_content.decode('utf-8')
+        else:
+            return JSONResponse(status_code=400, content={"error": "File type not supported"})
 
         if raw_text:
             text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
             texts = text_splitter.split_text(raw_text)
             documents = [LCDocument(page_content=t) for t in texts]
             
-            # No more batching or delays needed! This is fast and local.
             temp_vector_store = FAISS.from_documents(documents, embeddings)
             
             SESSION_RETRIEVERS[session_id] = temp_vector_store.as_retriever(
                 search_type="similarity", search_kwargs={"k": 4}
             )
-            return jsonify({"message": f"File '{file.filename}' processed successfully."})
+            return {"message": f"File '{file.filename}' processed successfully."}
+
     except Exception as e:
-        print(f"ERROR in /upload_document endpoint:")
         traceback.print_exc()
-        return jsonify({"error": f"Failed to process file: {str(e)}"}), 500
-    return jsonify({"error": "File type not supported"}), 400
+        return JSONResponse(status_code=500, content={"error": f"Failed to process file: {str(e)}"})
 
-@app.route('/reset', methods=['POST'])
-def reset():
-    session_id = request.json.get('session_id', DEFAULT_SESSION_ID)
-    # Reset the session to use the base retriever
-    SESSION_RETRIEVERS[session_id] = BASE_RETRIEVER
-    return jsonify({"message": "Conversation reset successfully."})
 
-@app.route('/chat_vision', methods=['POST'])
-def chat_vision():
-    """Handles chat queries that include an image."""
-    if not llm_vision: return jsonify({"error": "Vision LLM not initialized"}), 500
-    if 'image' not in request.files or 'question' not in request.form:
-        return jsonify({"error": "Image and question are required"}), 400
+@app.post('/reset')
+async def reset(request: ResetRequest):
+    SESSION_RETRIEVERS[request.session_id] = BASE_RETRIEVER
+    return {"message": "Conversation reset successfully."}
 
-    question = request.form['question']
-    image_file = request.files['image']
+
+@app.post('/chat_vision')
+async def chat_vision(question: str = Form(...), image: UploadFile = File(...)):
+    if not llm_vision:
+        return JSONResponse(status_code=500, content={"error": "Vision LLM not initialized"})
+    if not image or not question:
+        return JSONResponse(status_code=400, content={"error": "Image and question are required"})
 
     try:
-        image = Image.open(image_file.stream)
+        image_bytes = await image.read()
+        pil_image = Image.open(BytesIO(image_bytes))
         prompt_parts = [HumanMessage(content=[
             {"type": "text", "text": f"Carefully analyze this image and answer the following legal or document-related question: {question}"},
-            {"type": "image_url", "image_url": image}
+            {"type": "image_url", "image_url": pil_image}
         ])]
         response = llm_vision.invoke(prompt_parts)
-        return jsonify({"answer": response.content, "related_questions": []})
+        return {"answer": response.content, "related_questions": []}
     except Exception as e:
-        return jsonify({"error": f"Failed to process image query: {str(e)}"}), 500
+        return JSONResponse(status_code=500, content={"error": f"Failed to process image query: {str(e)}"})
 
-@app.route('/transcribe', methods=['POST'])
-def transcribe_audio():
-    """Transcribes audio file to text."""
-    if 'audio' not in request.files:
-        return jsonify({"error": "No audio file part"}), 400
+
+@app.post('/transcribe')
+async def transcribe_audio(audio: UploadFile = File(...)):
+    if not audio:
+        return JSONResponse(status_code=400, content={"error": "No audio file part"})
     
-    audio_file = request.files['audio']
     recognizer = sr.Recognizer()
-
     try:
+        audio_content = await audio.read()
         # Browser sends webm, convert it to WAV for speech_recognition
-        sound = AudioSegment.from_file(audio_file, format="webm")
+        sound = AudioSegment.from_file(BytesIO(audio_content), format="webm")
         wav_io = BytesIO()
         sound.export(wav_io, format="wav")
         wav_io.seek(0)
@@ -269,8 +242,12 @@ def transcribe_audio():
             audio_data = recognizer.record(source)
         
         text = recognizer.recognize_google(audio_data)
-        return jsonify({"transcription": text})
+        return {"transcription": text}
     except Exception as e:
-        return jsonify({"error": f"Could not transcribe audio: {str(e)}"}), 500
+        return JSONResponse(status_code=500, content={"error": f"Could not transcribe audio: {str(e)}"})
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    import uvicorn
+    # Note: The command below is for running directly with 'python app1.py'
+    # For development, it's better to run from the terminal with 'uvicorn app1:app --reload'
+    uvicorn.run("app1:app", host='0.0.0.0', port=5001, reload=True)

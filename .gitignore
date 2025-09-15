@@ -5,6 +5,8 @@ frontend/coverage/
 frontend/.pnp
 frontend/.pnp.js
 
+files_md.sh
+
 # ---- Python ----
 __pycache__/
 *.pyc
@@ -33,3 +35,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pip-log.txt
+
+backend/.env
+frontend/.env

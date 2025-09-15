@@ -4,9 +4,17 @@ python-dotenv
 PyPDF2
 python-docx
 langchain
+langchain-community
 langchain-groq
 langchain-google-genai
 faiss-cpu
 Pillow
 pydub
 SpeechRecognition
+sentence-transformers  # <-- ADD THIS
+torch 
+langchain-huggingface
+fastapi
+uvicorn[standard]
+python-multipart
+
