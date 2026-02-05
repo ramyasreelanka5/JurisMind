@@ -1,0 +1,140 @@
+/* Sidebar.css - Dual Theme Support */
+:root {
+  /* Mapped to App.css variables for Dark Mode */
+  --sidebar-bg: #0d0d14;
+  --sidebar-border: var(--border-color, #2a2a40);
+  --sidebar-text: var(--text-primary, #EAEAEA);
+  --sidebar-text-secondary: var(--text-secondary, #a0a0b0);
+  --sidebar-hover-bg: var(--background-secondary, #1a1a2e);
+  --sidebar-active-bg: var(--accent-color, #8b5cf6);
+  --sidebar-active-text: #ffffff;
+}
+
+body.light-mode {
+  --sidebar-bg: #f0f0f7;
+  --sidebar-text: #18181b; /* Dark text for light background */
+  --sidebar-text-secondary: #52525b; /* Slightly lighter dark text */
+  --sidebar-active-text: #ffffff;
+  --sidebar-hover-bg: #e5e7eb; /* Light gray for hover effect */
+}
+
+.sidebar-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px);
+  z-index: 998; opacity: 0; transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+/* UPDATE: Only show overlay on mobile when sidebar is open */
+@media (max-width: 768px) {
+  .sidebar-overlay.show { opacity: 1; pointer-events: auto; }
+}
+
+.sidebar {
+  position: fixed; top: 0; left: 0; height: 100vh; width: 280px;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  display: flex; flex-direction: column;
+  z-index: 999;
+  /* UPDATE: Sidebar is now hidden by default on ALL screen sizes */
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+
+/* UPDATE: When open, it slides into view */
+.sidebar.sidebar-open {
+  transform: translateX(0);
+}
+
+/* Sidebar Top Section (User Profile) */
+.sidebar-top {
+  padding: 1rem; border-bottom: 1px solid var(--sidebar-border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.user-info {
+  display: flex; align-items: center; gap: 0.75rem;
+  flex-grow: 1; cursor: pointer;
+}
+.user-avatar {
+  width: 36px; height: 36px; border-radius: 8px;
+  background: var(--accent-color); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 600; font-size: 1.2rem;
+}
+.username { color: var(--sidebar-text); font-weight: 500; font-size: 1rem; }
+
+/* UPDATE: Hide the close button on desktop, as the main toggle is now in the header */
+.close-btn {
+  background: none; border: none; color: var(--sidebar-text-secondary);
+  font-size: 1.5rem; cursor: pointer; border-radius: 8px; width: 40px;
+  height: 40px; display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s ease;
+}
+.close-btn:hover { background: var(--sidebar-hover-bg); color: var(--sidebar-text); }
+@media (min-width: 769px) {
+  .close-btn { display: none; }
+}
+
+
+/* Conversations List */
+.conversations-list { flex: 1; overflow-y: auto; padding: 1rem 0.75rem; }
+.list-header {
+  padding: 0 0.5rem 0.5rem; font-size: 0.8rem;
+  font-weight: 600; color: var(--sidebar-text-secondary);
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.loading-conversations, .no-conversations {
+  padding: 2rem 1.5rem; text-align: center; color: var(--sidebar-text-secondary);
+}
+
+.conversation-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.75rem; margin-bottom: 0.25rem; border-radius: 8px;
+  cursor: pointer; transition: all 0.2s ease;
+  position: relative;
+}
+.conversation-item:hover { background-color: var(--sidebar-hover-bg); }
+.conversation-item.active {
+  background-color: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
+}
+.conversation-item.active .conversation-title { font-weight: 500; }
+.conversation-item.active .delete-btn { color: var(--sidebar-active-text); }
+
+.conversation-title {
+  color: var(--sidebar-text); font-size: 0.95rem;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  transition: color 0.2s ease;
+}
+.conversation-item.active .conversation-title { color: var(--sidebar-active-text); }
+
+.delete-btn {
+  background: none; border: none; color: var(--sidebar-text-secondary);
+  border-radius: 6px; font-size: 1rem; cursor: pointer;
+  transition: all 0.2s ease; margin-left: 0.5rem;
+  display: none; align-items: center; justify-content: center;
+  padding: 0.25rem;
+}
+.conversation-item:hover .delete-btn { display: flex; }
+.delete-btn:hover { color: #ff4d4d; background-color: rgba(255, 77, 77, 0.1); }
+
+
+/* Sidebar Footer (New Chat + Theme Toggle) */
+.sidebar-footer {
+  padding: 0.75rem; border-top: 1px solid var(--sidebar-border);
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.new-conversation-btn {
+  flex-grow: 1; background: var(--sidebar-hover-bg);
+  border: 1px solid var(--sidebar-border); color: var(--sidebar-text);
+  padding: 0.75rem; border-radius: 8px; cursor: pointer;
+  text-align: left; font-size: 0.9rem; font-weight: 500;
+  display: flex; align-items: center; gap: 0.75rem;
+  transition: all 0.2s ease;
+}
+.new-conversation-btn:hover { border-color: var(--accent-color); color: var(--accent-color); }
+.new-conversation-btn .icon { font-size: 1.1rem; }
+
+/* Scrollbar */
+.conversations-list::-webkit-scrollbar { width: 6px; }
+.conversations-list::-webkit-scrollbar-track { background: transparent; }
+.conversations-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
