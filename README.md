@@ -1,97 +1,332 @@
-Legal Assistance Project
+# 🏛️ JurisMind - AI-Powered Legal Assistant
 
-This project is a Legal Assistance bot application with a Python backend and a JavaScript-based frontend.
+<div align="center">
 
-Getting Started
+[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-19.1+-61DAFB.svg)](https://reactjs.org/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Follow these instructions to get a local copy of the project up and running on your machine.
+*An intelligent legal chatbot powered by LLMs and RAG to provide accurate legal information based on Indian law*
 
-Prerequisites
+[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [API Documentation](#-api-endpoints) • [Tech Stack](#-tech-stack)
+
+</div>
+
+---
+
+## 📋 Overview
+
+**JurisMind** is a sophisticated AI-powered legal assistance platform designed to help users navigate complex legal documents, understand legal concepts, and get accurate information about Indian laws including the Indian Penal Code (IPC), Constitution of India, Companies Act, Labour Laws, and more.
+
+### 🎯 Key Capabilities
+
+- **💬 Intelligent Q&A**: Ask legal questions in natural language and receive accurate, well-structured answers
+- **📄 Document Processing**: Upload and analyze legal documents (PDF, DOCX, TXT)
+- **🖼️ Image OCR**: Extract and analyze text from legal document images
+- **🎤 Voice Input**: Ask questions using voice recordings
+- **🌍 Multi-Language Support**: Translate legal information to multiple languages
+- **💾 Conversation History**: Save and manage chat conversations with authentication
+- **🔍 RAG-Powered Search**: Leverage vector embeddings for context-aware legal information retrieval
+
+---
+
+## ✨ Features
+
+### 🤖 AI-Powered Features
+- **LLM Integration**: Powered by Groq's LLaMA 3.3 70B model for accurate legal responses
+- **Vector Search**: FAISS-based similarity search for relevant legal context
+- **Related Questions**: AI-generated follow-up questions based on conversation context
+- **Smart Summarization**: Automatic conversation title generation
+
+### 📱 User Experience
+- **Modern UI**: Clean, responsive React frontend with dark/light theme support
+- **Authentication**: Secure user registration and login with session management
+- **Conversation Management**: Create, view, and delete chat histories
+- **File Upload**: Support for multiple document formats (PDF, DOCX, TXT)
+- **Voice Recording**: Speech-to-text transcription for hands-free interaction
+
+### 🔒 Security & Privacy
+- **Password Hashing**: Secure password storage using industry-standard hashing
+- **Token-Based Auth**: JWT-like session tokens with expiration
+- **User Isolation**: Each user's conversations are private and isolated
+
+---
+
+## 🛠️ Tech Stack
+
+### Backend
+| Technology | Purpose |
+|------------|---------|
+| **Python 3.8+** | Core programming language |
+| **FastAPI** | Modern async web framework (recommended) |
+| **Flask** | Alternative lightweight web framework |
+| **LangChain** | LLM orchestration and RAG pipeline |
+| **Groq API** | LLaMA 3.3 70B model inference |
+| **FAISS** | Vector similarity search |
+| **HuggingFace** | Sentence embeddings (all-MiniLM-L6-v2) |
+| **SQLite** | User and conversation storage |
+| **Tesseract OCR** | Image text extraction |
+| **Deep Translator** | Multi-language translation |
+
+### Frontend
+| Technology | Purpose |
+|------------|---------|
+| **React 19.1** | UI framework |
+| **Axios** | HTTP client |
+| **React Markdown** | Markdown rendering |
+| **React Syntax Highlighter** | Code syntax highlighting |
+| **CSS3** | Styling and animations |
+
+---
+
+## 📦 Installation
+
+### Prerequisites
 
 Before you begin, ensure you have the following installed:
 
-    Python 3.8+ and pip
-    
-    Node.js and npm
+- **Python 3.8 or higher** ([Download](https://www.python.org/downloads/))
+- **Node.js 16+ and npm** ([Download](https://nodejs.org/))
+- **Tesseract OCR** ([Download for Windows](https://github.com/UB-Mannheim/tesseract/wiki))
+- **Git** ([Download](https://git-scm.com/downloads))
 
-Install this software for image 
+### 🔧 Setup Instructions
 
-Installation and Setup
+#### 1️⃣ Clone the Repository
 
-1. Install Tesseract OCR
+```bash
+git clone https://github.com/ramyasreelanka5/JurisMind.git
+cd JurisMind
+```
 
-Download and install Tesseract from the official repository: https://github.com/UB-Mannheim/tesseract/wiki .
+#### 2️⃣ Backend Setup
 
-Important: After installation, you may need to add the Tesseract installation path to your system's environment variables or specify it directly in the backend code. Open backend/app.py and update the following line with your Tesseract path if necessary:
+```bash
+# Navigate to backend directory
+cd backend
 
-    # Update this path according to your Tesseract installation
-    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# Install Python dependencies
+pip install -r requirements.txt
+```
 
+**Configure Environment Variables:**
 
-2. Clone the Repository
+Create a `.env` file in the `backend` directory:
 
-First, clone the repository to your local machine.
+```env
+GROQ_API_KEY=your_groq_api_key_here
+GOOGLE_API_KEY=your_google_api_key_here
+TESSERACT_CMD=C:\Program Files\Tesseract-OCR\tesseract.exe
+```
 
-    git clone https://github.com/kiransrisai/Legal_chatbot.git
-    
-    cd Legal_chatbot
+> 💡 **Get API Keys:**
+> - Groq API: [https://console.groq.com](https://console.groq.com)
+> - Google API: [https://ai.google.dev](https://ai.google.dev)
 
-3. Set Up the Backend
+**Update Tesseract Path (if needed):**
 
-The backend requires Python dependencies and API keys.
+If Tesseract is installed in a different location, update the path in:
+- `backend/app.py` (line 43)
+- `backend/app1.py` (line 40)
 
-Navigate to the backend directory and install the required packages:
+#### 3️⃣ Frontend Setup
 
-    cd backend
-    
-    pip install -r requirements.txt
+```bash
+# Navigate to frontend directory (from project root)
+cd frontend
 
-Create an environment file:
+# Install Node.js dependencies
+npm install
+```
 
-Create a new file named .env inside the backend folder.
+---
 
-Add your API keys to the .env file:
-Open the .env file and add the following lines, replacing the placeholders with your actual keys:
-    
-    GROQ_API_KEY="your_groq_api_key_here"
-    GOOGLE_API_KEY="your_google_api_key_here"
+## 🚀 Usage
 
-4. Set Up the Frontend
+### Running the Application
 
-The frontend requires Node.js modules.
+You need to run both the **backend** and **frontend** servers simultaneously.
 
-  Navigate to the frontend directory:
-  
-  # If you are in the backend folder, go back one level first
-  
-      cd ../frontend
+#### Option 1: FastAPI Backend (Recommended ⭐)
 
-  Install the node modules:
-  
-    npm install
+**Terminal 1 - Backend:**
+```bash
+cd backend
+uvicorn app1:app --host 0.0.0.0 --port 5001 --reload
+```
 
-Running the Application
+**Terminal 2 - Frontend:**
+```bash
+cd frontend
+npm start
+```
 
-1. Start the Backend Server
+#### Option 2: Flask Backend (Alternative)
 
-  Navigate to the backend directory:
-  
-      cd path/to/your/project/backend
-  
-  Run the application:
-  
-      python app.py
-  
-  The backend server will now be running.
+**Terminal 1 - Backend:**
+```bash
+cd backend
+python app.py
+```
 
-2. Start the Frontend Application
+**Terminal 2 - Frontend:**
+```bash
+cd frontend
+npm start
+```
 
-  In a new terminal, navigate to the frontend directory:
-  
-      cd path/to/your/project/frontend
-  
-  Run the start command (e.g., npm start):
-      
-      npm start
+### 🌐 Access the Application
 
-Your application should now be accessible in your browser.
+- **Frontend UI**: [http://localhost:3000](http://localhost:3000)
+- **Backend API**: [http://localhost:5001](http://localhost:5001)
+- **API Docs** (FastAPI only): [http://localhost:5001/docs](http://localhost:5001/docs)
+
+---
+
+## 📚 API Endpoints
+
+### Authentication
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/register` | Register a new user |
+| `POST` | `/login` | Login and receive auth token |
+| `POST` | `/logout` | Invalidate auth token |
+| `GET` | `/verify` | Verify token validity |
+
+### Chat & AI
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/chat` | Send a text question to the chatbot |
+| `POST` | `/chat_vision` | Send an image with OCR analysis |
+| `POST` | `/transcribe` | Transcribe audio to text |
+| `POST` | `/upload_document` | Upload legal documents for RAG |
+| `POST` | `/reset` | Reset conversation context |
+
+### Conversations
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/conversations` | Get all user conversations |
+| `GET` | `/conversations/{id}` | Get specific conversation messages |
+| `POST` | `/conversations/new` | Create new conversation |
+| `DELETE` | `/conversations/{id}` | Delete a conversation |
+
+### Languages (FastAPI only)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/languages` | Get supported languages for translation |
+
+---
+
+## 📁 Project Structure
+
+```
+JurisMind/
+│
+├── backend/
+│   ├── app.py                    # Flask implementation
+│   ├── app1.py                   # FastAPI implementation (recommended)
+│   ├── requirements.txt          # Python dependencies
+│   ├── translation_utils.py      # Multi-language support
+│   ├── ingestion.py              # Document ingestion script
+│   ├── .env                      # Environment variables (create this)
+│   ├── conversations.db          # SQLite database (auto-generated)
+│   ├── LEGAL-DATA/               # Legal document corpus
+│   │   ├── ipc_act.pdf
+│   │   ├── COI.pdf
+│   │   ├── CompaniesAct2013.pdf
+│   │   └── ...
+│   └── my_vector_store/          # FAISS vector database
+│       ├── index.faiss
+│       └── index.pkl
+│
+├── frontend/
+│   ├── public/                   # Static assets
+│   ├── src/
+│   │   ├── App.js                # Main application component
+│   │   ├── AuthModal.js          # Authentication modal
+│   │   ├── Sidebar.js            # Conversation sidebar
+│   │   ├── ThemeToggle.js        # Dark/Light theme toggle
+│   │   ├── useAudioRecorder.js   # Audio recording hook
+│   │   └── ...
+│   ├── package.json              # Node dependencies
+│   └── package-lock.json
+│
+├── README.md                     # This file
+└── .gitignore                    # Git ignore rules
+```
+
+---
+
+## 🎨 Screenshots
+
+> 📸 *Add screenshots of your application here*
+
+---
+
+## 🔮 Future Enhancements
+
+- [ ] Multi-document comparison
+- [ ] Case law search integration
+- [ ] Legal document generation
+- [ ] Advanced citation tracking
+- [ ] Email notifications
+- [ ] Export conversations as PDF
+- [ ] Voice output (text-to-speech)
+- [ ] Mobile application
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 👥 Authors
+
+- **Ramya Sree Lanka** - [@ramyasreelanka5](https://github.com/ramyasreelanka5)
+
+---
+
+## 🙏 Acknowledgments
+
+- **LangChain** for the RAG framework
+- **Groq** for LLM inference
+- **HuggingFace** for embeddings
+- **Indian Legal Documents** for the knowledge base
+- **Open Source Community** for amazing tools and libraries
+
+---
+
+## 📞 Support
+
+If you have any questions or need help, please:
+- Open an issue on [GitHub](https://github.com/ramyasreelanka5/JurisMind/issues)
+- Contact: [Your Email Here]
+
+---
+
+<div align="center">
+
+**⭐ Star this repository if you find it helpful!**
+
+Made with ❤️ and ⚖️
+
+</div>
