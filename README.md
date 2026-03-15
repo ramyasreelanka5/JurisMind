@@ -288,9 +288,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ---
 
 
-## 👥 Authors
 
-- **Ramya Sree Lanka** - [@ramyasreelanka5](https://github.com/ramyasreelanka5)
 
 ---
 
